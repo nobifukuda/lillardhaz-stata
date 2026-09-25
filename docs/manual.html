@@ -158,7 +158,7 @@ hazard equation, timing follows either:
 <p>
 For any hazard equation, define the copula residual via the probability integral transform:
 </p>
-<div class="formula-block">z = Phi<sup>-1</sup>( 1 &minus; S(t) )</div>
+<div class="formula-block">z = Phi<sup>-1</sup>( 1 - S(t) )</div>
 <p>
 which is exactly standard normal under the fitted model, by construction, regardless of which
 timing distribution generated S(t). This is what lets a log-normal equation be paired with a
@@ -170,19 +170,19 @@ piecewise-Gompertz equation under the same copula machinery.
 <h2>3. Piecewise Gompertz timing</h2>
 <p>
 The piecewise Gompertz hazard (Lillard 1993, following his footnote 6) makes the log-hazard a
-continuous, piecewise-linear function of time. Given <em>K</em>&minus;1 interior nodes
+continuous, piecewise-linear function of time. Given <em>K</em>-1 interior nodes
 0 &lt; n<sub>1</sub> &lt; ... &lt; n<sub>K-1</sub> (set by <code>nodes1()</code>/<code>nodes2()</code>,
 defining <em>K</em> segments) and per-segment slopes s<sub>1</sub>,...,s<sub>K</sub>:
 </p>
 <div class="formula-block">
-log h(t) = theta + L<sub>k</sub> + s<sub>k</sub>&middot;(t &minus; n<sub>k-1</sub>) &nbsp; for t in segment k
+log h(t) = theta + L<sub>k</sub> + s<sub>k</sub>&middot;(t - n<sub>k-1</sub>) &nbsp; for t in segment k
 </div>
 <p>
 where L<sub>k</sub> is built recursively (L<sub>1</sub>=0, L<sub>k+1</sub> = L<sub>k</sub> +
-s<sub>k</sub>&middot;(n<sub>k</sub>&minus;n<sub>k-1</sub>)) so the log-hazard has no jumps at the
+s<sub>k</sub>&middot;(n<sub>k</sub>-n<sub>k-1</sub>)) so the log-hazard has no jumps at the
 nodes. Because each segment's hazard is exp(linear), the cumulative hazard has a closed form on
 each segment (integrate exp(a+bx) analytically, with a linear-in-t fallback when a segment's
-slope is numerically zero), so S(t) = exp(&minus;H(t)) and f(t) = h(t)S(t) require no numerical
+slope is numerically zero), so S(t) = exp(-H(t)) and f(t) = h(t)S(t) require no numerical
 integration at any stage. This is implemented once, for a general number of segments, in
 <code>_lillardhaz_pgomp.ado</code> and shared by both equations.
 </p>
@@ -191,7 +191,7 @@ integration at any stage. This is implemented once, for a general number of segm
 <section id="likelihood">
 <h2>4. The joint likelihood, case by case</h2>
 <p>
-Write a = sqrt(1&minus;rho<sup>2</sup>). When both equations are hazards, with residuals
+Write a = sqrt(1-rho<sup>2</sup>). When both equations are hazards, with residuals
 (z1,z2) and marginal density/survival (f1,S1,f2,S2):
 </p>
 <div class="grid2">
@@ -201,15 +201,15 @@ Write a = sqrt(1&minus;rho<sup>2</sup>). When both equations are hazards, with r
 </div>
 <div class="panel">
 <h3>1 observed, 2 censored</h3>
-<div class="formula-block">f1 &middot; ( 1 &minus; Phi((z2&minus;rho&middot;z1)/a) )</div>
+<div class="formula-block">f1 &middot; ( 1 - Phi((z2-rho&middot;z1)/a) )</div>
 </div>
 <div class="panel">
 <h3>1 censored, 2 observed</h3>
-<div class="formula-block">f2 &middot; ( 1 &minus; Phi((z1&minus;rho&middot;z2)/a) )</div>
+<div class="formula-block">f2 &middot; ( 1 - Phi((z1-rho&middot;z2)/a) )</div>
 </div>
 <div class="panel">
 <h3>both censored</h3>
-<div class="formula-block">Phi2(&minus;z1,&minus;z2;rho)</div>
+<div class="formula-block">Phi2(-z1,-z2;rho)</div>
 </div>
 </div>
 <p>
@@ -223,21 +223,21 @@ density/survival f2/S2):
 </div>
 <div class="panel">
 <h3>y1=1, obs 2 censored</h3>
-<div class="formula-block">Phi(theta1) &minus; Phi2(theta1,z2;&minus;rho)</div>
+<div class="formula-block">Phi(theta1) - Phi2(theta1,z2;-rho)</div>
 </div>
 <div class="panel">
 <h3>y1=0, obs 2 observed</h3>
-<div class="formula-block">f2 &middot; Phi(&minus;(theta1+rho&middot;z2)/a)</div>
+<div class="formula-block">f2 &middot; Phi(-(theta1+rho&middot;z2)/a)</div>
 </div>
 <div class="panel">
 <h3>y1=0, obs 2 censored</h3>
-<div class="formula-block">Phi2(&minus;theta1,&minus;z2;&minus;rho)</div>
+<div class="formula-block">Phi2(-theta1,-z2;-rho)</div>
 </div>
 </div>
 <p class="sub">
 Phi2(&middot;,&middot;;rho) is the bivariate normal CDF (Stata's <code>binormal()</code>). The
 censored-cell formulas follow the inclusion-exclusion identity
-P(Z1&gt;z1,Z2&gt;z2) = 1&minus;Phi(z1)&minus;Phi(z2)+Phi2(z1,z2;rho) = Phi2(&minus;z1,&minus;z2;rho).
+P(Z1&gt;z1,Z2&gt;z2) = 1-Phi(z1)-Phi(z2)+Phi2(z1,z2;rho) = Phi2(-z1,-z2;rho).
 </p>
 </section>
 
@@ -247,7 +247,7 @@ P(Z1&gt;z1,Z2&gt;z2) = 1&minus;Phi(z1)&minus;Phi(z2)+Phi2(z1,z2;rho) = Phi2(&min
 Setting rho=0 gives a=1, and every formula above factors exactly into the product of the two
 marginal terms &mdash; e.g. the both-observed hazard&times;hazard cell becomes
 phi(z1)phi(z2)&middot;f1&middot;f2/(phi(z1)phi(z2)) = f1&middot;f2, and the both-censored cell
-becomes Phi(&minus;z1)Phi(&minus;z2) = S1&middot;S2. This is exactly Lillard's own identification
+becomes Phi(-z1)Phi(-z2) = S1&middot;S2. This is exactly Lillard's own identification
 result: with no correlation, the joint likelihood is the product of two independent univariate
 likelihoods. <code>lillardhaz</code>'s <code>nocorr</code> option fits this restricted model
 using the <em>same</em> evaluator (with rho fixed at 0 and no <code>atanh_rho</code> equation)
@@ -260,7 +260,7 @@ univariate <code>streg</code> fits to 5+ significant figures.
 <h2>6. A correction relative to the original templates</h2>
 <p>
 The widely-circulated <code>ml</code> templates this package supersedes generally build the
-joint bivariate density by inverting (1&minus;rho<sup>2</sup>) into the wrong term of the
+joint bivariate density by inverting (1-rho<sup>2</sup>) into the wrong term of the
 exponent, or by mixing marginal <em>density</em> where a marginal <em>hazard</em> was intended
 (the same class of error documented for the univariate case in the companion
 <a href="https://github.com/nobifukuda/splitpopsurv-stata">splitpopsurv-stata</a> package). This
@@ -280,7 +280,7 @@ results (n=20,000&ndash;25,000 per run):
 <table>
 <tr><th>eq1() / eq2()</th><th>corr</th><th>true rho</th><th>estimated rho</th><th>notes</th></tr>
 <tr><td>lognormal / lognormal</td><td>yes</td><td>0.500</td><td>0.491</td><td>all regression coefficients within 2% of truth</td></tr>
-<tr><td>probit / lognormal</td><td>yes</td><td>&minus;0.400</td><td>&minus;0.418</td><td></td></tr>
+<tr><td>probit / lognormal</td><td>yes</td><td>-0.400</td><td>-0.418</td><td></td></tr>
 <tr><td>pgompertz / pgompertz</td><td>yes</td><td>0.350</td><td>0.361</td><td>2 nodes each side, all slopes recovered</td></tr>
 <tr><td>probit / pgompertz</td><td>yes</td><td>0.300</td><td>0.302</td><td>the second segment's slope was weakly identified under heavy censoring in this particular design &mdash; a data/power property, not a code defect</td></tr>
 <tr><td>lognormal / lognormal</td><td>no (nocorr)</td><td>0 (fixed)</td><td>&mdash;</td><td>coefficients matched two separate <code>streg</code> fits to 5+ significant figures</td></tr>
