@@ -186,6 +186,15 @@ slope is numerically zero), so S(t) = exp(-H(t)) and f(t) = h(t)S(t) require no 
 integration at any stage. This is implemented once, for a general number of segments, in
 <code>_lillardhaz_pgomp.ado</code> and shared by both equations.
 </p>
+<div class="note">
+<strong>nodes1()/nodes2() are literal duration time values you choose, not a segment count.</strong>
+Each entry is the actual time point where the hazard's slope is allowed to change &mdash; there is
+no auto-spacing, equal-interval, or quantile-based placement. <em>K</em> is simply derived from how
+many values you list (listing 3 nodes gives 4 segments; 1 node gives 2). For example, to place
+breakpoints at t=2, t=6, and t=15 (4 segments):
+<pre><code>. lillardhaz time1 event1 time2 event2, eq1(pgompertz) eq2(pgompertz) ///
+    x1(x1) x2(x2) nodes1(2 6 15) nodes2(4)</code></pre>
+</div>
 </section>
 
 <section id="likelihood">
