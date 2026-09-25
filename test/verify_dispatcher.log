@@ -1,0 +1,201 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      Stata 19.0
+___/   /   /___/   /   /___/       MP—Parallel Edition
+
+ Statistics and Data Science       Copyright 1985-2025 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-782-8272        https://www.stata.com
+                                   979-696-4600        service@stata.com
+
+Stata license: Single-user 4-core  perpetual
+Serial number: 501906342176
+  Licensed to: Nobutaka Fukuda
+               Tokyo, Japan
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. More than 2 billion observations are allowed; see help obs_advice.
+      4. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+
+Running /Applications/Stata19/profile.do ...
+
+. do /Users/nfukuda/lillardhaz-stata/test/verify_dispatcher.do 
+
+. version 17
+
+. clear all
+
+. set more off
+
+. set seed 55
+
+. adopath ++ "/Users/nfukuda/lillardhaz-stata/pkg"
+  [1]              "/Users/nfukuda/lillardhaz-stata/pkg"
+  [2]  (BASE)      "/Applications/Stata19/ado/base/"
+  [3]  (SITE)      "/Applications/Stata19/ado/site/"
+  [4]              "."
+  [5]  (PERSONAL)  "/Applications/Stata19/ado/personal/"
+  [6]  (PLUS)      "/Applications/Stata19/ado/stbplus/"
+  [7]  (OLDPLACE)  "/Applications/Stata19/ado/oldplace/"
+
+. 
+. * ================================================================
+. * Full lillardhaz_d0 dispatcher test: pgompertz x pgompertz, correlated,
+. * WITH x1/x2 covariates this time (fixing the DGP oversight from the
+. * subroutine-only test), arbitrary 2-segment nodes on each side.
+. * ================================================================
+. global LH_eq1type "pgompertz"
+
+. global LH_eq2type "pgompertz"
+
+. global LH_nodes1 "5"
+
+. global LH_nodes2 "4"
+
+. global LH_corr = 1
+
+. 
+. quietly {
+
+. 
+. display as result _n "TRUE: level1(b0+alpha0)=" b0+alpha0 " b1=" b1 " slope1a
+> =" alpha1 " slope1b=" alpha2
+
+TRUE: level1(b0+alpha0)=-1.7 b1=.3 slope1a=.35 slope1b=-.1
+
+. display as result "      level2(lev2_0+gamma0)=" lev2_0+gamma0 " lev2_1=" lev
+> 2_1 " slope2a=" gamma1 " slope2b=" gamma2 " rho=" rho_true
+      level2(lev2_0+gamma0)=-1 lev2_1=-.25 slope2a=.25 slope2b=-.2 rho=.35
+
+. 
+. capture noisily ml model d0 lillardhaz_d0 (eq1: time1 event1 time2 event2 x1 
+> = x1) (s1a:) (s1b:) (eq2: x2) (s2a:) (s2b:) (atanh_rho:), technique(bfgs)
+
+. capture noisily ml maximize, iterate(250)
+
+Initial:      Log likelihood =     -<inf>  (could not be evaluated)
+Feasible:     Log likelihood = -318049.24
+Rescale:      Log likelihood = -100293.01
+Rescale eq:   Log likelihood = -87047.135
+Iteration 0:  Log likelihood = -87047.135  
+Iteration 1:  Log likelihood = -85641.472  (backed up)
+Iteration 2:  Log likelihood = -84390.025  (backed up)
+Iteration 3:  Log likelihood = -83282.516  (backed up)
+Iteration 4:  Log likelihood = -82422.159  (backed up)
+Iteration 5:  Log likelihood = -82339.143  (backed up)
+Iteration 6:  Log likelihood = -82328.057  (backed up)
+Iteration 7:  Log likelihood = -82315.028  (backed up)
+Iteration 8:  Log likelihood = -82313.651  (backed up)
+Iteration 9:  Log likelihood = -82312.602  (backed up)
+Iteration 10: Log likelihood = -81180.802  
+Iteration 11: Log likelihood = -81001.869  
+Iteration 12: Log likelihood =  -80996.52  
+Iteration 13: Log likelihood = -80996.432  
+Iteration 14: Log likelihood = -80996.403  
+Iteration 15: Log likelihood = -80996.401  
+Iteration 16: Log likelihood = -80996.401  
+
+                                                       Number of obs =  25,000
+                                                       Wald chi2(1)  = 2202.39
+Log likelihood = -80996.401                            Prob > chi2   =  0.0000
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+eq1          |
+          x1 |   .3032567   .0064619    46.93   0.000     .2905915    .3159218
+       _cons |     -1.707   .0128932  -132.40   0.000     -1.73227   -1.681729
+-------------+----------------------------------------------------------------
+s1a          |
+       _cons |   .3540557   .0046899    75.49   0.000     .3448636    .3632478
+-------------+----------------------------------------------------------------
+s1b          |
+       _cons |   -.108878   .0117994    -9.23   0.000    -.1320044   -.0857516
+-------------+----------------------------------------------------------------
+eq2          |
+          x2 |  -.2517036   .0123805   -20.33   0.000    -.2759689   -.2274383
+       _cons |  -.9809906   .0127377   -77.01   0.000    -1.005956   -.9560251
+-------------+----------------------------------------------------------------
+s2a          |
+       _cons |    .240572   .0054973    43.76   0.000     .2297975    .2513464
+-------------+----------------------------------------------------------------
+s2b          |
+       _cons |  -.1985052   .0087474   -22.69   0.000    -.2156497   -.1813606
+-------------+----------------------------------------------------------------
+atanh_rho    |
+       _cons |    .378085   .0064487    58.63   0.000     .3654458    .3907241
+------------------------------------------------------------------------------
+
+. display as result _n "first attempt rc = " _rc
+
+first attempt rc = 0
+
+. 
+. display as result _n "===== retry with informed starting values ====="
+
+===== retry with informed starting values =====
+
+. ml model d0 lillardhaz_d0 (eq1: time1 event1 time2 event2 x1 = x1) (s1a:) (s1
+> b:) (eq2: x2) (s2a:) (s2b:) (atanh_rho:), technique(bfgs)
+
+. ml init eq1:_cons=-1.7 eq1:x1=0.3 s1a:_cons=0.35 s1b:_cons=-0.1 eq2:_cons=-1.
+> 0 eq2:x2=-0.25 s2a:_cons=0.25 s2b:_cons=-0.2 atanh_rho:_cons=0.36
+
+. ml maximize, iterate(250)
+
+Initial:      Log likelihood = -81002.682
+Rescale:      Log likelihood = -81002.682
+Rescale eq:   Log likelihood = -81002.682
+Iteration 0:  Log likelihood = -81002.682  
+Iteration 1:  Log likelihood = -81001.673  (backed up)
+Iteration 2:  Log likelihood = -80998.685  (backed up)
+Iteration 3:  Log likelihood = -80998.485  (backed up)
+Iteration 4:  Log likelihood = -80997.851  (backed up)
+Iteration 5:  Log likelihood = -80997.811  (backed up)
+Iteration 6:  Log likelihood = -80997.787  (backed up)
+Iteration 7:  Log likelihood = -80997.781  (backed up)
+Iteration 8:  Log likelihood =  -80997.78  (backed up)
+Iteration 9:  Log likelihood = -80997.778  (backed up)
+Iteration 10: Log likelihood = -80996.923  
+Iteration 11: Log likelihood = -80996.401  
+Iteration 12: Log likelihood = -80996.401  
+
+                                                       Number of obs =  25,000
+                                                       Wald chi2(1)  = 2202.31
+Log likelihood = -80996.401                            Prob > chi2   =  0.0000
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+eq1          |
+          x1 |   .3032518    .006462    46.93   0.000     .2905866     .315917
+       _cons |  -1.707014   .0128932  -132.40   0.000    -1.732284   -1.681743
+-------------+----------------------------------------------------------------
+s1a          |
+       _cons |   .3540577   .0046899    75.49   0.000     .3448656    .3632498
+-------------+----------------------------------------------------------------
+s1b          |
+       _cons |  -.1088683    .011799    -9.23   0.000    -.1319939   -.0857426
+-------------+----------------------------------------------------------------
+eq2          |
+          x2 |  -.2516926   .0123805   -20.33   0.000    -.2759578   -.2274274
+       _cons |  -.9810053   .0127378   -77.02   0.000    -1.005971   -.9560397
+-------------+----------------------------------------------------------------
+s2a          |
+       _cons |   .2405781   .0054972    43.76   0.000     .2298037    .2513525
+-------------+----------------------------------------------------------------
+s2b          |
+       _cons |  -.1985123   .0087476   -22.69   0.000    -.2156572   -.1813673
+-------------+----------------------------------------------------------------
+atanh_rho    |
+       _cons |   .3780884   .0064486    58.63   0.000     .3654493    .3907275
+------------------------------------------------------------------------------
+
+. 
+end of do-file

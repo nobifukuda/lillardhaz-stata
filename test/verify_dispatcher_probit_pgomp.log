@@ -1,0 +1,124 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      Stata 19.0
+___/   /   /___/   /   /___/       MP—Parallel Edition
+
+ Statistics and Data Science       Copyright 1985-2025 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-782-8272        https://www.stata.com
+                                   979-696-4600        service@stata.com
+
+Stata license: Single-user 4-core  perpetual
+Serial number: 501906342176
+  Licensed to: Nobutaka Fukuda
+               Tokyo, Japan
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. More than 2 billion observations are allowed; see help obs_advice.
+      4. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+
+Running /Applications/Stata19/profile.do ...
+
+. do /Users/nfukuda/lillardhaz-stata/test/verify_dispatcher_probit_pgomp.do 
+
+. version 17
+
+. clear all
+
+. set more off
+
+. set seed 31
+
+. adopath ++ "/Users/nfukuda/lillardhaz-stata/pkg"
+  [1]              "/Users/nfukuda/lillardhaz-stata/pkg"
+  [2]  (BASE)      "/Applications/Stata19/ado/base/"
+  [3]  (SITE)      "/Applications/Stata19/ado/site/"
+  [4]              "."
+  [5]  (PERSONAL)  "/Applications/Stata19/ado/personal/"
+  [6]  (PLUS)      "/Applications/Stata19/ado/stbplus/"
+  [7]  (OLDPLACE)  "/Applications/Stata19/ado/oldplace/"
+
+. 
+. * ================================================================
+. * Full lillardhaz_d0 dispatcher test: probit x piecewise Gompertz,
+. * correlated. Same DGP as verify_probit_pgomp.do (standalone lf
+. * program) but now routed through the actual dispatcher (which
+. * calls _lillardhaz_pgomp for eq2). 3-depvar layout (y1=binary,
+. * y2=time2, y3=event2) -- the case already correct before the
+. * y2time fix; this run confirms no regression.
+. * ================================================================
+. global LH_eq1type "probit"
+
+. global LH_eq2type "pgompertz"
+
+. global LH_nodes2 "5"
+
+. global LH_corr = 1
+
+. 
+. quietly {
+
+. 
+. display as result _n "TRUE: g0=" g0 " g1=" g1 " level2=" c0 " slope2a=" gamma
+> 1 " slope2b=" gamma2 " rho=" rho_true
+
+TRUE: g0=.2 g1=-.4 level2=-1.1 slope2a=.3 slope2b=-.12 rho=.3
+
+. 
+. ml model d0 lillardhaz_d0 (eq1: y1 time2 event2 x1 = x1) (level2:) (slope2a:)
+>  (slope2b:) (atanh_rho:), technique(bfgs)
+
+. ml maximize, iterate(250)
+
+Initial:      Log likelihood =  -49630.81
+Alternative:  Log likelihood = -251275.52
+Rescale:      Log likelihood = -48502.615
+Rescale eq:   Log likelihood = -44115.474
+Iteration 0:  Log likelihood = -44115.474  
+Iteration 1:  Log likelihood = -43369.555  (backed up)
+Iteration 2:  Log likelihood = -42201.517  (backed up)
+Iteration 3:  Log likelihood = -42097.601  (backed up)
+Iteration 4:  Log likelihood = -42077.383  (backed up)
+Iteration 5:  Log likelihood = -42043.888  (backed up)
+Iteration 6:  Log likelihood = -42038.528  (backed up)
+Iteration 7:  Log likelihood = -41927.786  
+Iteration 8:  Log likelihood = -41925.863  
+Iteration 9:  Log likelihood = -41925.747  
+Iteration 10: Log likelihood = -41925.745  
+
+                                                       Number of obs =  20,000
+                                                       Wald chi2(1)  = 1857.08
+Log likelihood = -41925.745                            Prob > chi2   =  0.0000
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+eq1          |
+          x1 |  -.4077549    .009462   -43.09   0.000    -.4263001   -.3892096
+       _cons |   .2021581    .009181    22.02   0.000     .1841637    .2201525
+-------------+----------------------------------------------------------------
+level2       |
+       _cons |  -1.096929   .0126127   -86.97   0.000     -1.12165   -1.072209
+-------------+----------------------------------------------------------------
+slope2a      |
+       _cons |   .2943674   .0058225    50.56   0.000     .2829556    .3057792
+-------------+----------------------------------------------------------------
+slope2b      |
+       _cons |  -.0048611   .0573383    -0.08   0.932    -.1172421      .10752
+-------------+----------------------------------------------------------------
+atanh_rho    |
+       _cons |   .3113944   .0094103    33.09   0.000     .2929504    .3298383
+------------------------------------------------------------------------------
+
+. display as result _n "rho estimate = " tanh(_b[atanh_rho:_cons])
+
+rho estimate = .30170507
+
+. 
+end of do-file
